@@ -1,11 +1,97 @@
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ApiError, getPlayerProfile } from "../api/client";
+import type { PlayerProfile } from "../types";
+import { formatMarketValue, ordinalPercentile } from "../lib/format";
+import PerformanceRadar from "../components/PerformanceRadar";
+import MetricBar from "../components/MetricBar";
 
 export default function ProfilePage() {
   const { playerId } = useParams();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<PlayerProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id = Number(playerId);
+    if (!Number.isFinite(id)) {
+      setError("Invalid player id");
+      return;
+    }
+    const controller = new AbortController();
+    setProfile(null);
+    setError(null);
+    getPlayerProfile(id, controller.signal)
+      .then(setProfile)
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof ApiError ? err.message : "Failed to load profile");
+      });
+    return () => controller.abort();
+  }, [playerId]);
+
+  if (error) {
+    return (
+      <section>
+        <Link to="/" className="button button--ghost">← Back to search</Link>
+        <p className="error-text" style={{ marginTop: "1rem" }}>{error}</p>
+      </section>
+    );
+  }
+
+  if (!profile) {
+    return <p className="muted">Loading profile…</p>;
+  }
+
+  const { player, metrics, peer_group_label, peer_group_size, market_value_percentile } = profile;
+
   return (
-    <section>
-      <h1>Player profile</h1>
-      <p className="muted">Profile for player {playerId} — implemented in a later step.</p>
+    <section className="profile">
+      <Link to="/" className="button button--ghost">← Back to search</Link>
+
+      <header className="profile__header card">
+        <div>
+          <h1>{player.name}</h1>
+          <p className="profile__subline">
+            <span className="badge">{player.sub_position}</span>
+            {player.age !== null && <span>{player.age} yrs</span>}
+            <span>{player.club}</span>
+            <span className="badge">{player.league}</span>
+          </p>
+        </div>
+        <div className="profile__value">
+          <span className="profile__value-amount">{formatMarketValue(player.market_value_eur)}</span>
+          <span className="muted">
+            {ordinalPercentile(market_value_percentile)} pct of {peer_group_label}
+          </span>
+          <button
+            className="button"
+            onClick={() => navigate(`/compare?one=${player.player_id}`)}
+          >
+            Compare this player →
+          </button>
+        </div>
+      </header>
+
+      <div className="profile__grid">
+        <div className="card">
+          <h2 className="section-title">Performance shape</h2>
+          <p className="muted section-hint">
+            Percentile vs {peer_group_label} ({peer_group_size} players). Outer = better.
+          </p>
+          <PerformanceRadar metrics={metrics} />
+        </div>
+
+        <div className="card">
+          <h2 className="section-title">Metric breakdown</h2>
+          <p className="muted section-hint">Value vs position average, ranked by percentile.</p>
+          <div className="metric-list">
+            {metrics.map((metric) => (
+              <MetricBar key={metric.key} metric={metric} />
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
