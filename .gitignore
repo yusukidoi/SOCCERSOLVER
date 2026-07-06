@@ -20,6 +20,9 @@ build/
 .vite/
 *.local
 
+# ---------- Data (raw source cache; curated players.csv IS committed) ----------
+backend/data/.raw/
+
 # ---------- Env & secrets ----------
 .env
 .env.*

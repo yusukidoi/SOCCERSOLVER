@@ -57,7 +57,30 @@ SOCCERSOLVER/
 
 ## Data source
 
-_To be documented in the dataset step._
+The dataset is derived from [**dcaribou/transfermarkt-datasets**](https://github.com/dcaribou/transfermarkt-datasets)
+— a clean, weekly-updated dataset built from public [Transfermarkt](https://www.transfermarkt.com/)
+data (used here under its open, non-commercial terms for a technical exercise).
+
+A reproducible prep script, [`backend/scripts/build_dataset.py`](backend/scripts/build_dataset.py),
+downloads three raw tables (`players`, `competitions`, `appearances`), joins them, and produces the
+curated `backend/data/players.csv` used by the app:
+
+- **Scope:** Big-5 European leagues (Premier League, LaLiga, Serie A, Bundesliga, Ligue 1),
+  **2025/26** season, players with ≥ 300 league minutes → **2,059 players**.
+- **Identity & context:** name, position, sub-position, age, club, league, market value (EUR).
+- **Performance:** minutes, matches, goals, assists, goal contributions, cards, and per-90 rates.
+
+The curated CSV is committed so the app runs offline (and in Docker) without network access.
+To regenerate it:
+
+```bash
+cd backend
+python scripts/build_dataset.py
+```
+
+> **Why derive instead of using a raw dump?** The prep script keeps only current, relevant
+> players and pre-computes the fields the product needs, so the API stays fast and the data
+> access layer works from a small, well-shaped file.
 
 ## Product & technical decisions
 
