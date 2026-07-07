@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # Repository root for the backend service (…/backend).
 BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -19,7 +20,11 @@ class Settings(BaseSettings):
 
     csv_path: str = Field(default="data/players.csv")
     backend_port: int = Field(default=8000)
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    # NoDecode stops pydantic-settings from JSON-parsing the env var, so the
+    # validator below can accept a plain comma-separated string.
+    cors_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["http://localhost:5173"]
+    )
 
     @field_validator("cors_origins", mode="before")
     @classmethod
