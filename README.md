@@ -92,27 +92,62 @@ Best for sharing a public URL with zero server management.
 
 ### Option C — Deploy to Railway (live demo link)
 
+> **Important:** This is a monorepo. Railway must **not** build from the repo root.
+> If you see `Railpack could not determine how to build the app`, you skipped
+> **Root Directory** — see step 3 below.
+
 1. Push repo to **GitHub**.
-2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub**.
-3. Add **two services** from the same repo:
+2. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub** → select repo.
+3. **Backend service** — in the service **Settings** tab, set:
 
-| Service | Root directory | Variables |
-| -------- | -------------- | --------- |
-| `soccersolver-api` | `backend` | `CSV_PATH=data/players.csv` |
-| `soccersolver-web` | `frontend` | `VITE_API_BASE_URL=https://<api-domain>` |
+   | Setting | Value |
+   | -------- | ----- |
+   | **Root Directory** | `backend` |
+   | **Config file path** | `/backend/railway.toml` |
+   | **Builder** | Dockerfile (should auto-detect after root dir is set) |
 
-4. Deploy **backend first**, copy its public URL (`https://….up.railway.app`).
-5. Set on **frontend** before rebuild:
+   Add variables:
    ```
-   VITE_API_BASE_URL=https://<your-api-url>
+   CSV_PATH=data/players.csv
    ```
-6. Set on **backend**:
-   ```
-   CORS_ORIGINS=https://<your-frontend-url>
-   ```
-7. Redeploy frontend (rebuild required so Vite picks up the API URL).
 
-Each service uses the `railway.toml` in its folder (`builder = DOCKERFILE`).
+4. **Generate a public domain** for the backend (Settings → Networking → Generate Domain).
+   Copy the URL, e.g. `https://soccersolver-api-production.up.railway.app`.
+
+5. **Add a second service** in the same project (+ New Service → GitHub Repo → same repo).
+
+6. **Frontend service** — Settings:
+
+   | Setting | Value |
+   | -------- | ----- |
+   | **Root Directory** | `frontend` |
+   | **Config file path** | `/frontend/railway.toml` |
+   | **Builder** | Dockerfile |
+
+   Add variable **before deploy** (Vite bakes this at build time):
+   ```
+   VITE_API_BASE_URL=https://<your-backend-domain-from-step-4>
+   ```
+
+7. Generate a **public domain** for the frontend. Copy that URL.
+
+8. On the **backend** service, add:
+   ```
+   CORS_ORIGINS=https://<your-frontend-domain>
+   ```
+   Save → backend redeploys.
+
+9. **Redeploy the frontend** once if you set `VITE_API_BASE_URL` after the first build.
+
+**Troubleshooting**
+
+| Error | Fix |
+| ----- | --- |
+| `Railpack could not determine how to build` | Set **Root Directory** to `backend` or `frontend` — not `/` |
+| Search works locally but not on Railway | Set `CORS_ORIGINS` on backend to the frontend public URL |
+| Frontend can't reach API | Rebuild frontend after setting `VITE_API_BASE_URL` |
+
+Each service uses `Dockerfile` + `railway.toml` / `railway.json` in its folder.
 
 ### Option D — Run each service directly (local dev)
 
