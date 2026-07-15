@@ -56,14 +56,65 @@ SOCCERSOLVER/
 The only requirement is Docker. From the repository root:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 Then open **http://localhost:5173**. The backend API is on **http://localhost:8000**
 (interactive docs at http://localhost:8000/docs). No `.env` is required — the compose file
 ships with working defaults. To override ports or URLs, copy `.env.example` to `.env`.
 
-### Option B — Run each service directly
+### Option B — Deploy to Render (live demo link)
+
+Best for sharing a public URL with zero server management.
+
+1. Push this repo to **GitHub** (public).
+2. Go to [render.com](https://render.com) → **New** → **Blueprint**.
+3. Connect the repo — Render reads `render.yaml` and creates two services:
+   - `soccersolver-api` (FastAPI)
+   - `soccersolver-web` (React + nginx)
+4. Wait for both builds to finish (free tier: first load may take ~1 min after idle).
+5. Open the **frontend** URL (`https://soccersolver-web.onrender.com` or similar).
+
+**If search fails with a network/CORS error after first deploy:**
+
+1. Copy the frontend URL from the Render dashboard.
+2. On the **API** service → **Environment** → set:
+   ```
+   CORS_ORIGINS=https://soccersolver-web.onrender.com
+   ```
+3. Save — Render redeploys the API automatically.
+
+**Notes:**
+
+- `VITE_API_BASE_URL` is wired to the API’s `RENDER_EXTERNAL_URL` at build time.
+- Free-tier services spin down after ~15 min idle; first request wakes them up.
+- API docs stay at `https://<api-service>.onrender.com/docs`.
+
+### Option C — Deploy to Railway (live demo link)
+
+1. Push repo to **GitHub**.
+2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub**.
+3. Add **two services** from the same repo:
+
+| Service | Root directory | Variables |
+| -------- | -------------- | --------- |
+| `soccersolver-api` | `backend` | `CSV_PATH=data/players.csv` |
+| `soccersolver-web` | `frontend` | `VITE_API_BASE_URL=https://<api-domain>` |
+
+4. Deploy **backend first**, copy its public URL (`https://….up.railway.app`).
+5. Set on **frontend** before rebuild:
+   ```
+   VITE_API_BASE_URL=https://<your-api-url>
+   ```
+6. Set on **backend**:
+   ```
+   CORS_ORIGINS=https://<your-frontend-url>
+   ```
+7. Redeploy frontend (rebuild required so Vite picks up the API URL).
+
+Each service uses the `railway.toml` in its folder (`builder = DOCKERFILE`).
+
+### Option D — Run each service directly (local dev)
 
 **Backend** (Python 3.12+):
 

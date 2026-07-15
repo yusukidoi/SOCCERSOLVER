@@ -9,9 +9,10 @@ RUN npm ci
 COPY . .
 
 # API base URL is baked into the bundle at build time (the browser calls it).
+# Render/Railway inject VITE_API_BASE_URL into the build environment.
 ARG VITE_API_BASE_URL=http://localhost:8000
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-RUN npm run build
+RUN echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" && npm run build
 
 # --- Serve stage: nginx serves the static files ---
 FROM nginx:alpine

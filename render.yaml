@@ -1,0 +1,34 @@
+# Render Blueprint — deploy both services from one repo.
+# Dashboard: New → Blueprint → connect GitHub repo → uses this file.
+#
+# After first deploy: if search fails with CORS errors, set on the API service:
+#   CORS_ORIGINS = <your frontend RENDER_EXTERNAL_URL>
+# (Blueprint tries to wire this automatically below.)
+
+services:
+  - type: web
+    name: soccersolver-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: CSV_PATH
+        value: data/players.csv
+      - key: CORS_ORIGINS
+        fromService:
+          type: web
+          name: soccersolver-web
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: soccersolver-web
+    runtime: docker
+    rootDir: frontend
+    plan: free
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: soccersolver-api
+          envVarKey: RENDER_EXTERNAL_URL
