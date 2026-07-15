@@ -5,6 +5,7 @@ import type { PlayerProfile } from "../types";
 import { formatMarketValue, ordinalPercentile } from "../lib/format";
 import PerformanceRadar from "../components/PerformanceRadar";
 import MetricBar from "../components/MetricBar";
+import ConfidenceBadge from "../components/ConfidenceBadge";
 
 export default function ProfilePage() {
   const { playerId } = useParams();
@@ -43,7 +44,7 @@ export default function ProfilePage() {
     return <p className="muted">Loading profile…</p>;
   }
 
-  const { player, metrics, peer_group_label, peer_group_size, market_value_percentile } = profile;
+  const { player, metrics, peer_group_label, peer_group_size, peer_confidence, market_value_percentile } = profile;
 
   return (
     <section className="profile">
@@ -77,14 +78,17 @@ export default function ProfilePage() {
         <div className="card">
           <h2 className="section-title">Performance shape</h2>
           <p className="muted section-hint">
-            Percentile vs {peer_group_label} ({peer_group_size} players). Outer = better.
+            Percentile vs {peer_group_label}. Outer = better. Raw values sit in the breakdown.
           </p>
+          <ConfidenceBadge level={peer_confidence} peerCount={peer_group_size} />
           <PerformanceRadar metrics={metrics} />
         </div>
 
         <div className="card">
           <h2 className="section-title">Metric breakdown</h2>
-          <p className="muted section-hint">Value vs position average, ranked by percentile.</p>
+          <p className="muted section-hint">
+            Actual value vs position average — percentile shows relative standing.
+          </p>
           <div className="metric-list">
             {metrics.map((metric) => (
               <MetricBar key={metric.key} metric={metric} />

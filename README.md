@@ -171,16 +171,27 @@ python scripts/build_dataset.py
 
 ## What I'd improve with more time / consciously left out
 
-- **Richer metrics.** The source's aggregated appearances give goals, assists and minutes. With more
-  time I'd blend FBref data (shots, xG, progressive passes, defensive actions) for a more complete
-  radar — especially position-specific metrics (a centre-back's radar shouldn't be about goals).
-- **Position-aware metric sets.** Today every player is scored on the same offensive metrics; ideally
-  each position would surface the metrics that matter for it.
-- **Code-splitting.** Recharts makes the JS bundle ~600KB; lazy-loading the chart-heavy views would
-  cut initial load. Left out to keep the build simple for the exercise.
-- **Frontend tests + caching.** No component tests and no request caching (e.g. React Query). The
-  brief asked for backend business-logic tests, which are covered; frontend tests were out of scope
-  for the time budget.
+### Recently added (post-challenge upgrades)
+
+- **Position-specific metrics** — Attack, Midfield, Defender, and Goalkeeper each surface
+  different metrics (e.g. defenders include discipline cards with lower-is-better polarity).
+- **Peer confidence labels** — profiles and comparisons flag when percentiles may be noisy
+  because the peer group is small (`high` / `medium` / `low` by sample size).
+- **Comparison deltas** — each metric shows the absolute gap (e.g. `▲ +0.04` goals/90), not
+  just who wins the proportional bar.
+- **Cross-position comparison note** — when roles differ, a shared output-metric set is used
+  and the UI explains that.
+
+### Still on the roadmap
+
+- **Richer metrics.** Blend FBref data (shots, xG, progressive passes, defensive actions) for a
+  more complete radar — especially position-specific metrics (a centre-back's radar shouldn't be
+  about goals).
+- **Similar players** — recommendation panel on the profile using cosine similarity within the
+  peer group.
+- **Code-splitting.** Recharts makes the JS bundle ~600KB; lazy-loading the chart-heavy views
+  would cut initial load.
+- **Frontend tests + caching.** No component tests and no request caching (e.g. React Query).
 - **Persistence & scale.** The in-memory CSV repository is perfect for this dataset size but would
   become a real database (and paginated search) for a production catalogue.
 - **Accessibility & polish.** Keyboard navigation for the search dropdown and fuller ARIA labelling

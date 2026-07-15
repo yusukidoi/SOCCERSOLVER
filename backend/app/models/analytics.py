@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models.player import Player
 
 Winner = Literal["one", "two", "tie"]
+ConfidenceLevel = Literal["high", "medium", "low"]
 
 
 class MetricContext(BaseModel):
@@ -28,6 +29,9 @@ class PlayerProfile(BaseModel):
     player: Player
     peer_group_label: str
     peer_group_size: int
+    peer_confidence: ConfidenceLevel = Field(
+        description="How reliable percentiles are given peer-group sample size"
+    )
     market_value_percentile: int
     metrics: list[MetricContext]
 
@@ -43,6 +47,7 @@ class ComparisonMetric(BaseModel):
     one_percentile: int
     two_percentile: int
     winner: Winner
+    delta: float = Field(description="Absolute gap between the two values")
 
 
 class PlayerComparison(BaseModel):
@@ -52,4 +57,12 @@ class PlayerComparison(BaseModel):
     two: Player
     one_market_value_percentile: int
     two_market_value_percentile: int
+    one_peer_group_size: int
+    two_peer_group_size: int
+    peer_confidence_one: ConfidenceLevel
+    peer_confidence_two: ConfidenceLevel
+    comparison_note: str | None = Field(
+        default=None,
+        description="Shown when a cross-position comparison uses shared metrics",
+    )
     metrics: list[ComparisonMetric]

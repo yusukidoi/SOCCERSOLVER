@@ -24,6 +24,8 @@ export interface Player extends PlayerSummary {
   goal_contributions_per90: number;
 }
 
+export type ConfidenceLevel = "high" | "medium" | "low";
+
 export interface MetricContext {
   key: string;
   label: string;
@@ -37,6 +39,7 @@ export interface PlayerProfile {
   player: Player;
   peer_group_label: string;
   peer_group_size: number;
+  peer_confidence: ConfidenceLevel;
   market_value_percentile: number;
   metrics: MetricContext[];
 }
@@ -52,6 +55,7 @@ export interface ComparisonMetric {
   one_percentile: number;
   two_percentile: number;
   winner: Winner;
+  delta: number;
 }
 
 export interface PlayerComparison {
@@ -59,5 +63,10 @@ export interface PlayerComparison {
   two: Player;
   one_market_value_percentile: number;
   two_market_value_percentile: number;
+  one_peer_group_size: number;
+  two_peer_group_size: number;
+  peer_confidence_one: ConfidenceLevel;
+  peer_confidence_two: ConfidenceLevel;
+  comparison_note: string | null;
   metrics: ComparisonMetric[];
 }

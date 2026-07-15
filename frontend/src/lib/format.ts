@@ -25,3 +25,14 @@ export function percentileColor(percentile: number): string {
   if (percentile >= 25) return "#d97706";
   return "#dc2626";
 }
+
+/** Show the absolute gap on comparison rows, e.g. "▲ +0.04". */
+export function formatDelta(
+  delta: number,
+  winner: "one" | "two" | "tie",
+  format?: (value: number) => string,
+): string {
+  if (winner === "tie" || delta === 0) return "Even";
+  const value = format ? format(delta) : Number.isInteger(delta) ? String(delta) : delta.toFixed(2);
+  return `▲ +${value}`;
+}

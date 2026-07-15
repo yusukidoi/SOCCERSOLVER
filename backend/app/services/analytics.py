@@ -10,12 +10,17 @@ from dataclasses import dataclass
 
 from app.models.analytics import (
     ComparisonMetric,
+    ConfidenceLevel,
     MetricContext,
     PlayerComparison,
     PlayerProfile,
     Winner,
 )
 from app.models.player import Player
+
+# Minimum peer counts for confidence labelling (percentiles get noisy below this).
+CONFIDENCE_HIGH_MIN = 50
+CONFIDENCE_MEDIUM_MIN = 20
 
 
 @dataclass(frozen=True)
@@ -27,17 +32,76 @@ class MetricDefinition:
     higher_is_better: bool = True
 
 
-# The metrics shown on the profile radar and the comparison view. All are
-# "higher is better" for this offensive-oriented dataset; the polarity flag
-# keeps the door open for metrics like cards where lower is better.
-METRICS: tuple[MetricDefinition, ...] = (
+# Position-aware metric sets — each role surfaces what matters most with the
+# data we have today. Defenders/GKs lean on minutes and discipline where
+# attacking stats are less meaningful.
+POSITION_METRICS: dict[str, tuple[MetricDefinition, ...]] = {
+    "Attack": (
+        MetricDefinition("goals_per90", "Goals /90"),
+        MetricDefinition("assists_per90", "Assists /90"),
+        MetricDefinition("goal_contributions_per90", "G+A /90"),
+        MetricDefinition("goals", "Goals"),
+        MetricDefinition("assists", "Assists"),
+        MetricDefinition("minutes_played", "Minutes"),
+    ),
+    "Midfield": (
+        MetricDefinition("assists_per90", "Assists /90"),
+        MetricDefinition("goal_contributions_per90", "G+A /90"),
+        MetricDefinition("assists", "Assists"),
+        MetricDefinition("goals_per90", "Goals /90"),
+        MetricDefinition("goals", "Goals"),
+        MetricDefinition("minutes_played", "Minutes"),
+    ),
+    "Defender": (
+        MetricDefinition("minutes_played", "Minutes"),
+        MetricDefinition("yellow_cards", "Yellow cards", higher_is_better=False),
+        MetricDefinition("red_cards", "Red cards", higher_is_better=False),
+        MetricDefinition("goal_contributions_per90", "G+A /90"),
+        MetricDefinition("assists_per90", "Assists /90"),
+        MetricDefinition("goals_per90", "Goals /90"),
+    ),
+    "Goalkeeper": (
+        MetricDefinition("minutes_played", "Minutes"),
+        MetricDefinition("yellow_cards", "Yellow cards", higher_is_better=False),
+        MetricDefinition("red_cards", "Red cards", higher_is_better=False),
+        MetricDefinition("assists", "Assists"),
+        MetricDefinition("goal_contributions_per90", "G+A /90"),
+        MetricDefinition("goals", "Goals"),
+    ),
+}
+
+# Fallback when position is unknown or for cross-position head-to-head.
+DEFAULT_METRICS: tuple[MetricDefinition, ...] = POSITION_METRICS["Midfield"]
+
+SHARED_COMPARISON_METRICS: tuple[MetricDefinition, ...] = (
+    MetricDefinition("minutes_played", "Minutes"),
+    MetricDefinition("goal_contributions_per90", "G+A /90"),
     MetricDefinition("goals_per90", "Goals /90"),
     MetricDefinition("assists_per90", "Assists /90"),
-    MetricDefinition("goal_contributions_per90", "G+A /90"),
     MetricDefinition("goals", "Goals"),
     MetricDefinition("assists", "Assists"),
-    MetricDefinition("minutes_played", "Minutes"),
 )
+
+
+def metrics_for_position(position: str) -> tuple[MetricDefinition, ...]:
+    """Return the metric set tailored to a broad position."""
+    return POSITION_METRICS.get(position, DEFAULT_METRICS)
+
+
+def metrics_for_comparison(one: Player, two: Player) -> tuple[MetricDefinition, ...]:
+    """Same role → position-specific metrics; different roles → shared output set."""
+    if one.position == two.position:
+        return metrics_for_position(one.position)
+    return SHARED_COMPARISON_METRICS
+
+
+def peer_confidence(peer_group_size: int) -> ConfidenceLevel:
+    """Label how trustworthy percentiles are given the peer sample size."""
+    if peer_group_size >= CONFIDENCE_HIGH_MIN:
+        return "high"
+    if peer_group_size >= CONFIDENCE_MEDIUM_MIN:
+        return "medium"
+    return "low"
 
 
 def _metric_value(player: Player, key: str) -> float:
@@ -63,10 +127,11 @@ def mean(values: list[float]) -> float:
     return sum(values) / len(values) if values else 0.0
 
 
-def build_profile(player: Player, peers: list[Player]) -> PlayerProfile:
-    """Contextualise a player's metrics against their league + position peers."""
+def _build_metric_contexts(
+    player: Player, peers: list[Player], definitions: tuple[MetricDefinition, ...]
+) -> list[MetricContext]:
     metrics: list[MetricContext] = []
-    for definition in METRICS:
+    for definition in definitions:
         value = _metric_value(player, definition.key)
         population = [_metric_value(peer, definition.key) for peer in peers]
         metrics.append(
@@ -79,14 +144,20 @@ def build_profile(player: Player, peers: list[Player]) -> PlayerProfile:
                 higher_is_better=definition.higher_is_better,
             )
         )
+    return metrics
 
+
+def build_profile(player: Player, peers: list[Player]) -> PlayerProfile:
+    """Contextualise a player's metrics against their league + position peers."""
+    definitions = metrics_for_position(player.position)
     market_values = [float(peer.market_value_eur) for peer in peers]
     return PlayerProfile(
         player=player,
         peer_group_label=f"{player.position}s in the {player.league}",
         peer_group_size=len(peers),
+        peer_confidence=peer_confidence(len(peers)),
         market_value_percentile=percentile_rank(float(player.market_value_eur), market_values),
-        metrics=metrics,
+        metrics=_build_metric_contexts(player, peers, definitions),
     )
 
 
@@ -108,8 +179,11 @@ def build_comparison(
     two_peers: list[Player],
 ) -> PlayerComparison:
     """Compare two players metric by metric, each ranked within their own peers."""
+    definitions = metrics_for_comparison(one, two)
+    cross_position = one.position != two.position
     metrics: list[ComparisonMetric] = []
-    for definition in METRICS:
+
+    for definition in definitions:
         one_value = _metric_value(one, definition.key)
         two_value = _metric_value(two, definition.key)
         metrics.append(
@@ -130,6 +204,7 @@ def build_comparison(
                     definition.higher_is_better,
                 ),
                 winner=_decide_winner(one_value, two_value, definition.higher_is_better),
+                delta=round(abs(one_value - two_value), 2),
             )
         )
 
@@ -141,6 +216,15 @@ def build_comparison(
         ),
         two_market_value_percentile=percentile_rank(
             float(two.market_value_eur), [float(p.market_value_eur) for p in two_peers]
+        ),
+        one_peer_group_size=len(one_peers),
+        two_peer_group_size=len(two_peers),
+        peer_confidence_one=peer_confidence(len(one_peers)),
+        peer_confidence_two=peer_confidence(len(two_peers)),
+        comparison_note=(
+            "Cross-position comparison uses shared output metrics."
+            if cross_position
+            else None
         ),
         metrics=metrics,
     )

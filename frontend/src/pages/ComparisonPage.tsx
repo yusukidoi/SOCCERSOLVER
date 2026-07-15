@@ -5,6 +5,7 @@ import type { PlayerComparison, PlayerSummary } from "../types";
 import { formatMarketValue } from "../lib/format";
 import PlayerPicker from "../components/PlayerPicker";
 import ComparisonRow from "../components/ComparisonRow";
+import ConfidenceBadge from "../components/ConfidenceBadge";
 
 function useSlot(id: number | null): PlayerSummary | null {
   const [player, setPlayer] = useState<PlayerSummary | null>(null);
@@ -98,15 +99,27 @@ export default function ComparisonPage() {
 
       {comparison && (
         <>
+          {comparison.comparison_note && (
+            <p className="cmp__note">{comparison.comparison_note}</p>
+          )}
+
           <div className="cmp__summary card">
             <div className="cmp__summary-side" style={{ color: "#38bdf8" }}>
               <strong>{comparison.one.name}</strong>
               <span className="cmp__wins">{tally.one} metrics</span>
+              <ConfidenceBadge
+                level={comparison.peer_confidence_one}
+                peerCount={comparison.one_peer_group_size}
+              />
             </div>
             <span className="muted">leads</span>
             <div className="cmp__summary-side cmp__summary-side--right" style={{ color: "#f59e0b" }}>
               <strong>{comparison.two.name}</strong>
               <span className="cmp__wins">{tally.two} metrics</span>
+              <ConfidenceBadge
+                level={comparison.peer_confidence_two}
+                peerCount={comparison.two_peer_group_size}
+              />
             </div>
           </div>
 
@@ -128,14 +141,18 @@ export default function ComparisonPage() {
                     ? "one"
                     : "two"
               }
+              delta={Math.abs(
+                comparison.one.market_value_eur - comparison.two.market_value_eur,
+              )}
               format={formatMarketValue}
+              deltaFormat={formatMarketValue}
             />
           </div>
 
           <div className="card">
             <h2 className="section-title">Performance</h2>
             <p className="muted section-hint">
-              Bar shows each player's share; ▲ marks the leader. Percentiles are vs their own peers.
+              Bar shows share; ▲ is the leader and the gap is the absolute difference.
             </p>
             <div className="cmp__rows">
               {comparison.metrics.map((metric) => (
@@ -147,6 +164,7 @@ export default function ComparisonPage() {
                   onePercentile={metric.one_percentile}
                   twoPercentile={metric.two_percentile}
                   winner={metric.winner}
+                  delta={metric.delta}
                 />
               ))}
             </div>

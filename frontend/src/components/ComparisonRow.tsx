@@ -1,4 +1,5 @@
 import type { Winner } from "../types";
+import { formatDelta } from "../lib/format";
 
 interface Props {
   label: string;
@@ -7,7 +8,9 @@ interface Props {
   onePercentile?: number;
   twoPercentile?: number;
   winner: Winner;
+  delta: number;
   format?: (value: number) => string;
+  deltaFormat?: (value: number) => string;
 }
 
 const ONE_COLOR = "#38bdf8";
@@ -15,7 +18,7 @@ const TWO_COLOR = "#f59e0b";
 
 /**
  * One metric compared head to head: a single bar split proportionally between
- * the two players, the leader marked, with each value (and optional percentile).
+ * the two players, the leader marked, with each value, percentile, and delta.
  */
 export default function ComparisonRow({
   label,
@@ -24,7 +27,9 @@ export default function ComparisonRow({
   onePercentile,
   twoPercentile,
   winner,
+  delta,
   format = (value) => String(value),
+  deltaFormat,
 }: Props) {
   const total = oneValue + twoValue;
   const oneShare = total > 0 ? (oneValue / total) * 100 : 50;
@@ -41,6 +46,9 @@ export default function ComparisonRow({
 
       <div className="cmp-row__center">
         <span className="cmp-row__label">{label}</span>
+        {winner !== "tie" && delta > 0 && (
+          <span className="cmp-row__delta">{formatDelta(delta, winner, deltaFormat ?? format)}</span>
+        )}
         <div className="cmp-row__track">
           <div
             className="cmp-row__fill"
