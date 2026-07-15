@@ -35,6 +35,11 @@ export interface MetricContext {
   higher_is_better: boolean;
 }
 
+export interface SimilarPlayer {
+  player: PlayerSummary;
+  similarity: number;
+}
+
 export interface PlayerProfile {
   player: Player;
   peer_group_label: string;
@@ -42,6 +47,7 @@ export interface PlayerProfile {
   peer_confidence: ConfidenceLevel;
   market_value_percentile: number;
   metrics: MetricContext[];
+  similar_players: SimilarPlayer[];
 }
 
 export type Winner = "one" | "two" | "tie";

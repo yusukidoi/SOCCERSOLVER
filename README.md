@@ -181,14 +181,14 @@ python scripts/build_dataset.py
   just who wins the proportional bar.
 - **Cross-position comparison note** — when roles differ, a shared output-metric set is used
   and the UI explains that.
+- **Similar players** — profile suggests up to 5 peers with the closest performance shape
+  (cosine similarity on position metrics), with one-click compare.
 
 ### Still on the roadmap
 
 - **Richer metrics.** Blend FBref data (shots, xG, progressive passes, defensive actions) for a
   more complete radar — especially position-specific metrics (a centre-back's radar shouldn't be
   about goals).
-- **Similar players** — recommendation panel on the profile using cosine similarity within the
-  peer group.
 - **Code-splitting.** Recharts makes the JS bundle ~600KB; lazy-loading the chart-heavy views
   would cut initial load.
 - **Frontend tests + caching.** No component tests and no request caching (e.g. React Query).

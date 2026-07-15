@@ -6,6 +6,7 @@ from the repository), which keeps this module free of I/O and easy to unit-test.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from app.models.analytics import (
@@ -14,6 +15,7 @@ from app.models.analytics import (
     MetricContext,
     PlayerComparison,
     PlayerProfile,
+    SimilarPlayer,
     Winner,
 )
 from app.models.player import Player
@@ -21,6 +23,7 @@ from app.models.player import Player
 # Minimum peer counts for confidence labelling (percentiles get noisy below this).
 CONFIDENCE_HIGH_MIN = 50
 CONFIDENCE_MEDIUM_MIN = 20
+SIMILAR_PLAYERS_LIMIT = 5
 
 
 @dataclass(frozen=True)
@@ -147,6 +150,62 @@ def _build_metric_contexts(
     return metrics
 
 
+def _feature_vector(
+    target: Player,
+    peers: list[Player],
+    definitions: tuple[MetricDefinition, ...],
+) -> list[float]:
+    """Min-max normalise position metrics across the peer group into a 0-1 vector."""
+    vector: list[float] = []
+    for definition in definitions:
+        values = [_metric_value(peer, definition.key) for peer in peers]
+        value = _metric_value(target, definition.key)
+        low, high = min(values), max(values)
+        if high == low:
+            normalised = 1.0
+        else:
+            normalised = (value - low) / (high - low)
+        if not definition.higher_is_better:
+            normalised = 1.0 - normalised
+        vector.append(normalised)
+    return vector
+
+
+def cosine_similarity(left: list[float], right: list[float]) -> float:
+    """Cosine similarity between two equal-length vectors."""
+    dot = sum(a * b for a, b in zip(left, right))
+    norm_left = math.sqrt(sum(a * a for a in left))
+    norm_right = math.sqrt(sum(b * b for b in right))
+    if norm_left == 0.0 or norm_right == 0.0:
+        return 0.0
+    return dot / (norm_left * norm_right)
+
+
+def find_similar_players(
+    player: Player,
+    peers: list[Player],
+    limit: int = SIMILAR_PLAYERS_LIMIT,
+) -> list[SimilarPlayer]:
+    """Rank peers by cosine similarity on position-specific performance metrics."""
+    definitions = metrics_for_position(player.position)
+    target_vector = _feature_vector(player, peers, definitions)
+    scored: list[SimilarPlayer] = []
+
+    for peer in peers:
+        if peer.player_id == player.player_id:
+            continue
+        score = cosine_similarity(target_vector, _feature_vector(peer, peers, definitions))
+        scored.append(
+            SimilarPlayer(
+                player=peer.summary(),
+                similarity=round(score * 100),
+            )
+        )
+
+    scored.sort(key=lambda item: item.similarity, reverse=True)
+    return scored[:limit]
+
+
 def build_profile(player: Player, peers: list[Player]) -> PlayerProfile:
     """Contextualise a player's metrics against their league + position peers."""
     definitions = metrics_for_position(player.position)
@@ -158,6 +217,7 @@ def build_profile(player: Player, peers: list[Player]) -> PlayerProfile:
         peer_confidence=peer_confidence(len(peers)),
         market_value_percentile=percentile_rank(float(player.market_value_eur), market_values),
         metrics=_build_metric_contexts(player, peers, definitions),
+        similar_players=find_similar_players(player, peers),
     )
 
 

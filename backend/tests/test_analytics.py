@@ -5,6 +5,8 @@ from __future__ import annotations
 from app.services.analytics import (
     build_comparison,
     build_profile,
+    cosine_similarity,
+    find_similar_players,
     metrics_for_comparison,
     metrics_for_position,
     peer_confidence,
@@ -82,6 +84,27 @@ class TestBuildProfile:
         assert goals_metric.percentile == 100
         assert goals_metric.value == 30.0
         assert goals_metric.peer_average == round((30 + 5 + 3) / 3, 2)
+
+    def test_profile_includes_similar_players(self) -> None:
+        twin = make_player(1, "Star", goals=20, goals_per90=0.8, assists_per90=0.2)
+        close = make_player(2, "Close", goals=18, goals_per90=0.75, assists_per90=0.22)
+        far = make_player(3, "Far", goals=2, goals_per90=0.1, assists_per90=0.05)
+        profile = build_profile(twin, [twin, close, far])
+
+        assert len(profile.similar_players) == 2
+        assert profile.similar_players[0].player.name == "Close"
+        assert profile.similar_players[0].similarity >= profile.similar_players[1].similarity
+
+
+class TestSimilarPlayers:
+    def test_cosine_similarity_identical_vectors(self) -> None:
+        assert round(cosine_similarity([1.0, 0.5], [1.0, 0.5]), 6) == 1.0
+
+    def test_excludes_self_from_results(self) -> None:
+        player = make_player(1, "Me", goals=10)
+        other = make_player(2, "Other", goals=8)
+        results = find_similar_players(player, [player, other], limit=5)
+        assert all(item.player.player_id != player.player_id for item in results)
 
 
 class TestBuildComparison:

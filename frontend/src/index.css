@@ -519,6 +519,67 @@ h1 {
   font-size: 0.68rem;
 }
 
+/* --- Similar players --- */
+.similar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.similar__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.similar__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.similar__main:hover .similar__name {
+  color: var(--accent);
+}
+
+.similar__name {
+  font-weight: 700;
+}
+
+.similar__meta {
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.similar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.similar__score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.similar .button--ghost {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+
 .cmp-row__track {
   display: flex;
   height: 12px;

@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.models.player import Player
+from app.models.player import Player, PlayerSummary
 
 Winner = Literal["one", "two", "tie"]
 ConfidenceLevel = Literal["high", "medium", "low"]
@@ -23,6 +23,13 @@ class MetricContext(BaseModel):
     higher_is_better: bool
 
 
+class SimilarPlayer(BaseModel):
+    """A peer with a comparable performance profile."""
+
+    player: PlayerSummary
+    similarity: int = Field(ge=0, le=100, description="Cosine similarity vs target, 0-100")
+
+
 class PlayerProfile(BaseModel):
     """A player plus their metrics contextualised within league + position."""
 
@@ -34,6 +41,10 @@ class PlayerProfile(BaseModel):
     )
     market_value_percentile: int
     metrics: list[MetricContext]
+    similar_players: list[SimilarPlayer] = Field(
+        default_factory=list,
+        description="Peers with the closest performance profile",
+    )
 
 
 class ComparisonMetric(BaseModel):

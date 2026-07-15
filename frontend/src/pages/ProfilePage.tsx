@@ -6,6 +6,7 @@ import { formatMarketValue, ordinalPercentile } from "../lib/format";
 import PerformanceRadar from "../components/PerformanceRadar";
 import MetricBar from "../components/MetricBar";
 import ConfidenceBadge from "../components/ConfidenceBadge";
+import SimilarPlayers from "../components/SimilarPlayers";
 
 export default function ProfilePage() {
   const { playerId } = useParams();
@@ -44,7 +45,15 @@ export default function ProfilePage() {
     return <p className="muted">Loading profile…</p>;
   }
 
-  const { player, metrics, peer_group_label, peer_group_size, peer_confidence, market_value_percentile } = profile;
+  const {
+    player,
+    metrics,
+    peer_group_label,
+    peer_group_size,
+    peer_confidence,
+    market_value_percentile,
+    similar_players,
+  } = profile;
 
   return (
     <section className="profile">
@@ -96,6 +105,8 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <SimilarPlayers players={similar_players} currentPlayerId={player.player_id} />
     </section>
   );
 }
