@@ -14,6 +14,7 @@ export interface PlayerSummary {
 export interface Player extends PlayerSummary {
   minutes_played: number;
   matches_played: number;
+  avg_minutes_per_match: number;
   goals: number;
   assists: number;
   goal_contributions: number;
@@ -22,6 +23,18 @@ export interface Player extends PlayerSummary {
   goals_per90: number;
   assists_per90: number;
   goal_contributions_per90: number;
+  highest_market_value_eur: number;
+  market_value_pct_of_peak: number;
+  last5_matches: number;
+  last5_minutes: number;
+  last5_goals: number;
+  last5_assists: number;
+  last5_goal_contributions: number;
+  last5_goals_per90: number;
+  last5_assists_per90: number;
+  last5_goal_contributions_per90: number;
+  progressive_passes_per90: number;
+  defensive_actions_per90: number;
 }
 
 export type ConfidenceLevel = "high" | "medium" | "low";

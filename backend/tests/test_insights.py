@@ -92,7 +92,24 @@ class TestRecommendation:
         assert len(profile.recommendation.reasons) >= 1
 
 
-class TestScenarioComparison:
+class TestTrends:
+    def test_hot_form_trends_up(self) -> None:
+        hot = make_player(
+            1,
+            "Hot",
+            goals_per90=0.4,
+            last5_goals_per90=1.0,
+            last5_goals=5,
+            last5_matches=5,
+            assists_per90=0.1,
+            last5_assists_per90=0.1,
+        )
+        peers = [hot, make_player(2, "Other", goals_per90=0.3)]
+        profile = build_profile(hot, peers)
+        finishing = next((t for t in profile.trends if t.label == "Finishing"), None)
+        assert finishing is not None
+        assert finishing.direction == "up"
+
     def test_comparison_includes_scenarios(self) -> None:
         young = make_player(1, "Young", age=21, goals=15, goals_per90=0.7, minutes_played=2200)
         veteran = make_player(2, "Vet", age=33, goals=12, goals_per90=0.5, minutes_played=2100)

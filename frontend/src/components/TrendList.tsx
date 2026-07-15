@@ -11,9 +11,9 @@ export default function TrendList({ trends }: { trends: TrendItem[] }) {
 
   return (
     <div className="trends">
-      <h3 className="subsection-title">Season indicators</h3>
+      <h3 className="subsection-title">Last {5} matches</h3>
       <p className="muted section-hint">
-        Direction inferred from per-90 vs volume — not last-5-match data.
+        Recent form vs full-season rate — from appearance logs.
       </p>
       <ul className="trend-list">
         {trends.map((trend) => (

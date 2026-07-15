@@ -77,6 +77,9 @@ def build_confidence(player: Player, peers: list[Player], peer_group_size: int) 
     if player.matches_played < MATCHES_LOW_THRESHOLD:
         reasons.append(f"Only {player.matches_played} matches in season sample")
 
+    if player.last5_matches < 5:
+        reasons.append(f"Last-5 form based on {player.last5_matches} recent appearances")
+
     peer_minutes = [float(p.minutes_played) for p in peers]
     avg_minutes = sum(peer_minutes) / len(peer_minutes) if peer_minutes else 0.0
     if avg_minutes > 0 and player.minutes_played < avg_minutes * MINUTES_LOW_RATIO:
@@ -84,7 +87,13 @@ def build_confidence(player: Player, peers: list[Player], peer_group_size: int) 
             f"Limited minutes ({player.minutes_played:,} vs peer avg {round(avg_minutes):,})"
         )
 
-    reasons.append("Season aggregates only — no match-by-match or tracking data")
+    if player.progressive_passes_per90 == 0 and player.position in ("Midfield", "Defender"):
+        reasons.append("Missing advanced stats (progressive passes / defensive actions)")
+
+    if player.progressive_passes_per90 == 0 and player.defensive_actions_per90 == 0:
+        reasons.append("No tracking data — using output and appearance logs only")
+    else:
+        reasons.append("Advanced stats available for subset of metrics")
 
     if not reasons:
         reasons.append("Large peer group with full-season minutes")
@@ -128,7 +137,22 @@ def build_explainability(
     if player.minutes_played >= 2000:
         insights.append("Consistent availability — 2,000+ minutes this season")
 
-    return insights[:5]
+    if player.last5_goal_contributions >= 3 and player.last5_matches >= 3:
+        insights.append(
+            f"Hot recent form — {player.last5_goal_contributions} G+A in last {player.last5_matches} matches"
+        )
+
+    if player.progressive_passes_per90 > 0:
+        prog_metric = next((m for m in metrics if m.key == "progressive_passes_per90"), None)
+        if prog_metric and _effective_percentile(prog_metric) >= INSIGHT_PERCENTILE_MIN:
+            insights.append("Strong progressive passing vs midfield peers")
+
+    if player.defensive_actions_per90 > 0:
+        def_metric = next((m for m in metrics if m.key == "defensive_actions_per90"), None)
+        if def_metric and _effective_percentile(def_metric) >= INSIGHT_PERCENTILE_MIN:
+            insights.append("High defensive contribution vs peers")
+
+    return insights[:6]
 
 
 def build_strengths_and_risks(
@@ -164,50 +188,75 @@ def build_strengths_and_risks(
     return strengths[:3], risks[:4]
 
 
+def _form_direction(season_rate: float, last5_rate: float, min_delta: float = 0.15) -> TrendDirection | None:
+    if season_rate <= 0 and last5_rate <= 0:
+        return None
+    baseline = season_rate if season_rate > 0 else last5_rate
+    if last5_rate >= baseline * (1 + min_delta):
+        return "up"
+    if last5_rate <= baseline * (1 - min_delta):
+        return "down"
+    return "stable"
+
+
 def build_trends(player: Player, metrics: list[MetricContext]) -> list[TrendItem]:
-    """Season indicators — efficiency gaps proxy form direction without match logs."""
+    """Last-5-match form vs season rate, plus market-value positioning."""
     trends: list[TrendItem] = []
-    by_key = {m.key: m for m in metrics}
 
     def add(label: str, direction: TrendDirection, detail: str) -> None:
         trends.append(TrendItem(label=label, direction=direction, detail=detail))
 
-    for per90_key, total_key, label in (
-        ("goals_per90", "goals", "Finishing"),
-        ("assists_per90", "assists", "Chance creation"),
-        ("goal_contributions_per90", "goal_contributions", "Goal contributions"),
-    ):
-        per90 = by_key.get(per90_key)
-        total = by_key.get(total_key)
-        if per90 and total:
-            gap = _effective_percentile(per90) - _effective_percentile(total)
-            if gap >= 15:
-                add(label, "up", "Per-90 output ahead of volume — efficient when on pitch")
-            elif gap <= -15:
-                add(label, "down", "Volume ahead of per-90 — output may taper with minutes")
+    if player.last5_matches > 0:
+        finishing = _form_direction(player.goals_per90, player.last5_goals_per90)
+        if finishing:
+            detail = (
+                f"{player.last5_goals} goals in last {player.last5_matches} "
+                f"({player.last5_goals_per90:.2f}/90 vs {player.goals_per90:.2f}/90 season)"
+            )
+            add("Finishing", finishing, detail)
 
+        creation = _form_direction(player.assists_per90, player.last5_assists_per90)
+        if creation:
+            detail = (
+                f"{player.last5_assists} assists in last {player.last5_matches} "
+                f"({player.last5_assists_per90:.2f}/90 vs {player.assists_per90:.2f}/90 season)"
+            )
+            add("Chance creation", creation, detail)
+
+        contrib = _form_direction(
+            player.goal_contributions_per90, player.last5_goal_contributions_per90
+        )
+        if contrib and contrib != finishing and contrib != creation:
+            add(
+                "Goal contributions",
+                contrib,
+                f"{player.last5_goal_contributions} G+A in last {player.last5_matches} matches",
+            )
+
+    if player.highest_market_value_eur > 0:
+        peak = player.market_value_pct_of_peak
+        if peak >= 95:
+            add("Market value", "stable", "At or near career-high valuation")
+        elif peak <= 70 and player.age is not None and player.age <= 27:
+            add(
+                "Market value",
+                "up",
+                f"Trading at {peak}% of peak — room to recover if form holds",
+            )
+        elif peak <= 60:
+            add("Market value", "down", f"Currently {peak}% of recorded peak value")
+
+    by_key = {m.key: m for m in metrics}
     minutes = by_key.get("minutes_played")
-    if minutes:
-        if _effective_percentile(minutes) >= 70:
-            add("Playing time", "up", "Regular starter by minutes share")
-        elif _effective_percentile(minutes) <= 30:
-            add("Playing time", "down", "Limited minutes relative to peers")
+    if minutes and player.last5_minutes > 0:
+        last5_share = player.last5_minutes / player.minutes_played if player.minutes_played else 0
+        expected_share = min(player.last5_matches, 5) / max(player.matches_played, 1)
+        if last5_share >= expected_share * 1.2:
+            add("Playing time", "up", "Recent minutes share above season average")
+        elif last5_share <= expected_share * 0.7:
+            add("Playing time", "down", "Fewer minutes in recent matches")
 
-    yellow = by_key.get("yellow_cards")
-    if yellow and not yellow.higher_is_better:
-        if _effective_percentile(yellow) >= 70:
-            add("Discipline", "up", "Fewer cards than most peers")
-        elif _effective_percentile(yellow) <= 30:
-            add("Discipline", "down", "Above-average card count")
-
-    if player.age is not None and player.age <= 24:
-        perf_avg = sum(_effective_percentile(m) for m in metrics) / len(metrics) if metrics else 0
-        if perf_avg >= 60:
-            add("Market value outlook", "up", "Young profile with above-average output")
-        else:
-            add("Market value outlook", "stable", "Young — upside depends on development")
-
-    return trends[:5]
+    return trends[:6]
 
 
 def _fit_rating(score: float) -> FitRating:

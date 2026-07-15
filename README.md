@@ -205,6 +205,10 @@ curated `backend/data/players.csv` used by the app:
   **2025/26** season, players with ≥ 300 league minutes → **2,059 players**.
 - **Identity & context:** name, position, sub-position, age, club, league, market value (EUR).
 - **Performance:** minutes, matches, goals, assists, goal contributions, cards, and per-90 rates.
+- **Recent form:** last-5-match goals, assists, minutes, and per-90 rates (from appearance logs).
+- **Market value context:** current value, career peak, and % of peak.
+- **Optional advanced stats:** progressive passes / defensive actions per 90 when
+  `scripts/enrich_fbref.py` has been run (`build_dataset.py --with-advanced`).
 
 The curated CSV is committed so the app runs offline (and in Docker) without network access.
 To regenerate it:
@@ -284,10 +288,15 @@ python scripts/build_dataset.py
 - **Team fit heuristics** — possession / counter / high-press scores from output metrics.
 - **Recommendation reasoning** — verdict (strong signing → caution) with plain-language reasons.
 - **Scenario comparison** — compare page frames upside, risk, and consistency per player.
+- **Last-5-match trends** — real form arrows (finishing, chance creation) vs season rate,
+  plus market-value positioning from peak valuation.
+- **Optional FBref enrichment** — `scripts/enrich_fbref.py` adds progressive passes and
+  defensive actions when scraping succeeds; app degrades gracefully without it.
 
 ### Still on the roadmap
 
-- **Match-level trends.** Last-5-match arrows need per-match or rolling stats (FBref / Opta).
+- **Match-level trends.** Last-5 is implemented; rolling xG / progressive passes per match
+  need FBref match logs or Opta feed.
 - **Club-specific team fit.** Wire real tactical profiles per club instead of style heuristics.
 - **Frontend tests.** Component tests for search keyboard nav and comparison rendering.
 - **Persistence & scale.** The in-memory CSV repository is perfect for this dataset size but would

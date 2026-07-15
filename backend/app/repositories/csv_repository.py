@@ -18,6 +18,8 @@ _INT_FIELDS = frozenset(
     {
         "player_id",
         "market_value_eur",
+        "highest_market_value_eur",
+        "market_value_pct_of_peak",
         "minutes_played",
         "matches_played",
         "goals",
@@ -25,9 +27,26 @@ _INT_FIELDS = frozenset(
         "goal_contributions",
         "yellow_cards",
         "red_cards",
+        "last5_matches",
+        "last5_minutes",
+        "last5_goals",
+        "last5_assists",
+        "last5_goal_contributions",
     }
 )
-_FLOAT_FIELDS = frozenset({"goals_per90", "assists_per90", "goal_contributions_per90"})
+_FLOAT_FIELDS = frozenset(
+    {
+        "goals_per90",
+        "assists_per90",
+        "goal_contributions_per90",
+        "avg_minutes_per_match",
+        "last5_goals_per90",
+        "last5_assists_per90",
+        "last5_goal_contributions_per90",
+        "progressive_passes_per90",
+        "defensive_actions_per90",
+    }
+)
 
 
 class CsvPlayerRepository(PlayerRepository):

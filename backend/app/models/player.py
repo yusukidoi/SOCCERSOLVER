@@ -27,6 +27,7 @@ class Player(PlayerBase):
 
     minutes_played: int = Field(..., ge=0)
     matches_played: int = Field(..., ge=0)
+    avg_minutes_per_match: float = Field(..., ge=0)
     goals: int = Field(..., ge=0)
     assists: int = Field(..., ge=0)
     goal_contributions: int = Field(..., ge=0)
@@ -35,6 +36,18 @@ class Player(PlayerBase):
     goals_per90: float = Field(..., ge=0)
     assists_per90: float = Field(..., ge=0)
     goal_contributions_per90: float = Field(..., ge=0)
+    highest_market_value_eur: int = Field(..., ge=0)
+    market_value_pct_of_peak: int = Field(..., ge=0, le=100)
+    last5_matches: int = Field(..., ge=0)
+    last5_minutes: int = Field(..., ge=0)
+    last5_goals: int = Field(..., ge=0)
+    last5_assists: int = Field(..., ge=0)
+    last5_goal_contributions: int = Field(..., ge=0)
+    last5_goals_per90: float = Field(..., ge=0)
+    last5_assists_per90: float = Field(..., ge=0)
+    last5_goal_contributions_per90: float = Field(..., ge=0)
+    progressive_passes_per90: float = Field(0.0, ge=0)
+    defensive_actions_per90: float = Field(0.0, ge=0)
 
     def summary(self) -> PlayerSummary:
         """Project this record onto the lightweight summary model."""

@@ -11,17 +11,20 @@ from app.repositories.csv_repository import CsvPlayerRepository
 
 _COLUMNS = [
     "player_id", "name", "position", "sub_position", "age", "club", "league",
-    "market_value_eur", "minutes_played", "matches_played", "goals", "assists",
-    "goal_contributions", "yellow_cards", "red_cards", "goals_per90",
-    "assists_per90", "goal_contributions_per90",
+    "market_value_eur", "highest_market_value_eur", "market_value_pct_of_peak",
+    "minutes_played", "matches_played", "avg_minutes_per_match",
+    "goals", "assists", "goal_contributions", "yellow_cards", "red_cards",
+    "goals_per90", "assists_per90", "goal_contributions_per90",
+    "last5_matches", "last5_minutes", "last5_goals", "last5_assists",
+    "last5_goal_contributions", "last5_goals_per90", "last5_assists_per90",
+    "last5_goal_contributions_per90", "progressive_passes_per90", "defensive_actions_per90",
 ]
 
 _ROWS = [
-    # id  name             pos       sub          age club  league            mv       min  mp  g  a  ga yc rc  g90  a90  ga90
-    [1, "Bruno Fernandes", "Midfield", "AM", 30, "MUFC", "Premier League", 70000000, 3000, 34, 8, 10, 18, 5, 0, 0.24, 0.30, 0.54],
-    [2, "Bruno Guimaraes", "Midfield", "CM", 27, "NUFC", "Premier League", 80000000, 2800, 32, 4, 6, 10, 6, 0, 0.13, 0.19, 0.32],
-    [3, "Rodri", "Midfield", "DM", 28, "MCFC", "Premier League", 110000000, 1500, 17, 3, 2, 5, 3, 1, 0.18, 0.12, 0.30],
-    [4, "Lautaro Martinez", "Attack", "CF", 28, "Inter", "Serie A", 90000000, 2600, 33, 18, 4, 22, 4, 0, 0.62, 0.14, 0.76],
+    [1, "Bruno Fernandes", "Midfield", "AM", 30, "MUFC", "Premier League", 70000000, 80000000, 88, 3000, 34, 88.2, 8, 10, 18, 5, 0, 0.24, 0.30, 0.54, 5, 450, 2, 3, 5, 0.4, 0.6, 1.0, 0.0, 0.0],
+    [2, "Bruno Guimaraes", "Midfield", "CM", 27, "NUFC", "Premier League", 80000000, 85000000, 94, 2800, 32, 87.5, 4, 6, 10, 6, 0, 0.13, 0.19, 0.32, 5, 400, 1, 1, 2, 0.23, 0.23, 0.45, 0.0, 0.0],
+    [3, "Rodri", "Midfield", "DM", 28, "MCFC", "Premier League", 110000000, 120000000, 92, 1500, 17, 88.2, 3, 2, 5, 3, 1, 0.18, 0.12, 0.30, 5, 430, 1, 0, 1, 0.21, 0.0, 0.21, 0.0, 0.0],
+    [4, "Lautaro Martinez", "Attack", "CF", 28, "Inter", "Serie A", 90000000, 95000000, 95, 2600, 33, 78.8, 18, 4, 22, 4, 0, 0.62, 0.14, 0.76, 5, 390, 3, 1, 4, 0.69, 0.23, 0.92, 0.0, 0.0],
 ]
 
 

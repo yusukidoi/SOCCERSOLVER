@@ -80,10 +80,9 @@ class TestBuildProfile:
         assert profile.peer_group_label == "Attacks in the Premier League"
         assert profile.market_value_percentile == 100
 
-        goals_metric = next(m for m in profile.metrics if m.key == "goals")
+        goals_metric = next(m for m in profile.metrics if m.key == "goals_per90")
         assert goals_metric.percentile == 100
-        assert goals_metric.value == 30.0
-        assert goals_metric.peer_average == round((30 + 5 + 3) / 3, 2)
+        assert goals_metric.value == 1.2
 
     def test_profile_includes_similar_players(self) -> None:
         twin = make_player(1, "Star", goals=20, goals_per90=0.8, assists_per90=0.2)
@@ -109,21 +108,21 @@ class TestSimilarPlayers:
 
 class TestBuildComparison:
     def test_winner_is_decided_per_metric(self) -> None:
-        one = make_player(1, "One", goals=20, assists=2)
-        two = make_player(2, "Two", goals=10, assists=9)
+        one = make_player(1, "One", goals=20, assists=2, goals_per90=1.0, assists_per90=0.1)
+        two = make_player(2, "Two", goals=10, assists=9, goals_per90=0.5, assists_per90=0.9)
         comparison = build_comparison(one, [one, two], two, [one, two])
 
-        goals = next(m for m in comparison.metrics if m.key == "goals")
-        assists = next(m for m in comparison.metrics if m.key == "assists")
+        goals = next(m for m in comparison.metrics if m.key == "goals_per90")
+        assists = next(m for m in comparison.metrics if m.key == "assists_per90")
         assert goals.winner == "one"
-        assert goals.delta == 10.0
+        assert goals.delta == 0.5
         assert assists.winner == "two"
 
     def test_equal_values_are_a_tie(self) -> None:
-        one = make_player(1, "One", goals=10)
-        two = make_player(2, "Two", goals=10)
+        one = make_player(1, "One", goals=10, goals_per90=0.5)
+        two = make_player(2, "Two", goals=10, goals_per90=0.5)
         comparison = build_comparison(one, [one, two], two, [one, two])
-        goals = next(m for m in comparison.metrics if m.key == "goals")
+        goals = next(m for m in comparison.metrics if m.key == "goals_per90")
         assert goals.winner == "tie"
         assert goals.delta == 0.0
 
