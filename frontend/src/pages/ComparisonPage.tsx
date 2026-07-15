@@ -6,6 +6,7 @@ import { formatMarketValue } from "../lib/format";
 import PlayerPicker from "../components/PlayerPicker";
 import ComparisonRow from "../components/ComparisonRow";
 import ConfidenceBadge from "../components/ConfidenceBadge";
+import Skeleton from "../components/Skeleton";
 
 function useSlot(id: number | null): PlayerSummary | null {
   const [player, setPlayer] = useState<PlayerSummary | null>(null);
@@ -35,6 +36,7 @@ export default function ComparisonPage() {
 
   const [comparison, setComparison] = useState<PlayerComparison | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const setSlot = (slot: "one" | "two", value: number | null) => {
     const next = new URLSearchParams(params);
@@ -47,15 +49,21 @@ export default function ComparisonPage() {
     if (oneId === null || twoId === null) {
       setComparison(null);
       setError(null);
+      setLoading(false);
       return;
     }
     const controller = new AbortController();
     setError(null);
+    setLoading(true);
     comparePlayers(oneId, twoId, controller.signal)
-      .then(setComparison)
+      .then((data) => {
+        setComparison(data);
+        setLoading(false);
+      })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof ApiError ? err.message : "Failed to compare players");
+        setLoading(false);
       });
     return () => controller.abort();
   }, [oneId, twoId]);
@@ -97,10 +105,24 @@ export default function ComparisonPage() {
 
       {error && <p className="error-text">{error}</p>}
 
+      {loading && (
+        <div className="card">
+          <Skeleton lines={1} />
+          <Skeleton className="skeleton--chart" lines={1} />
+          <Skeleton lines={4} />
+        </div>
+      )}
+
       {comparison && (
         <>
           {comparison.comparison_note && (
             <p className="cmp__note">{comparison.comparison_note}</p>
+          )}
+          {comparison.one.league !== comparison.two.league && (
+            <p className="cmp__note">
+              Different leagues ({comparison.one.league} vs {comparison.two.league}) — percentiles
+              are vs each player&apos;s own market. Raw values reflect different competition levels.
+            </p>
           )}
 
           <div className="cmp__summary card">

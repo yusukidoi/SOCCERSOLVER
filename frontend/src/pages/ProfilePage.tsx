@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, getPlayerProfile } from "../api/client";
 import type { PlayerProfile } from "../types";
 import { formatMarketValue, ordinalPercentile } from "../lib/format";
-import PerformanceRadar from "../components/PerformanceRadar";
 import MetricBar from "../components/MetricBar";
 import ConfidenceBadge from "../components/ConfidenceBadge";
 import SimilarPlayers from "../components/SimilarPlayers";
+import ProfileSkeleton from "../components/ProfileSkeleton";
+import Skeleton from "../components/Skeleton";
+
+const PerformanceRadar = lazy(() => import("../components/PerformanceRadar"));
 
 export default function ProfilePage() {
   const { playerId } = useParams();
@@ -42,7 +45,7 @@ export default function ProfilePage() {
   }
 
   if (!profile) {
-    return <p className="muted">Loading profile…</p>;
+    return <ProfileSkeleton />;
   }
 
   const {
@@ -90,7 +93,9 @@ export default function ProfilePage() {
             Percentile vs {peer_group_label}. Outer = better. Raw values sit in the breakdown.
           </p>
           <ConfidenceBadge level={peer_confidence} peerCount={peer_group_size} />
-          <PerformanceRadar metrics={metrics} />
+          <Suspense fallback={<Skeleton className="skeleton--chart" lines={1} />}>
+            <PerformanceRadar metrics={metrics} />
+          </Suspense>
         </div>
 
         <div className="card">

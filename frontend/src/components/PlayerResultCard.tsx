@@ -2,9 +2,20 @@ import { Link } from "react-router-dom";
 import type { PlayerSummary } from "../types";
 import { formatMarketValue } from "../lib/format";
 
-export default function PlayerResultCard({ player }: { player: PlayerSummary }) {
+interface Props {
+  player: PlayerSummary;
+  selected?: boolean;
+}
+
+export default function PlayerResultCard({ player, selected = false }: Props) {
   return (
-    <Link to={`/players/${player.player_id}`} className="result-card">
+    <Link
+      id={`result-${player.player_id}`}
+      to={`/players/${player.player_id}`}
+      className={`result-card${selected ? " result-card--selected" : ""}`}
+      role="option"
+      aria-selected={selected}
+    >
       <div className="result-card__main">
         <span className="result-card__name">{player.name}</span>
         <span className="result-card__sub">
