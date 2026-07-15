@@ -25,6 +25,10 @@ export interface Player extends PlayerSummary {
 }
 
 export type ConfidenceLevel = "high" | "medium" | "low";
+export type TrendDirection = "up" | "down" | "stable";
+export type FitRating = "excellent" | "high" | "medium" | "low";
+export type RecommendationVerdict = "strong_signing" | "good_signing" | "monitor" | "caution";
+export type ScenarioLevel = "higher" | "lower" | "similar";
 
 export interface MetricContext {
   key: string;
@@ -38,6 +42,36 @@ export interface MetricContext {
 export interface SimilarPlayer {
   player: PlayerSummary;
   similarity: number;
+  lower_market_value: boolean;
+  value_savings_eur: number | null;
+}
+
+export interface ConfidenceAssessment {
+  level: ConfidenceLevel;
+  reasons: string[];
+}
+
+export interface TrendItem {
+  label: string;
+  direction: TrendDirection;
+  detail: string | null;
+}
+
+export interface TeamFitRating {
+  style: string;
+  rating: FitRating;
+}
+
+export interface Recommendation {
+  verdict: RecommendationVerdict;
+  reasons: string[];
+}
+
+export interface PlayerScenario {
+  upside: ScenarioLevel;
+  risk: ScenarioLevel;
+  consistency: ScenarioLevel;
+  summary: string;
 }
 
 export interface PlayerProfile {
@@ -45,9 +79,17 @@ export interface PlayerProfile {
   peer_group_label: string;
   peer_group_size: number;
   peer_confidence: ConfidenceLevel;
+  confidence: ConfidenceAssessment;
   market_value_percentile: number;
   metrics: MetricContext[];
+  explainability: string[];
+  strengths: string[];
+  risks: string[];
+  trends: TrendItem[];
+  team_fit: TeamFitRating[];
+  recommendation: Recommendation | null;
   similar_players: SimilarPlayer[];
+  value_alternatives: SimilarPlayer[];
 }
 
 export type Winner = "one" | "two" | "tie";
@@ -74,5 +116,7 @@ export interface PlayerComparison {
   peer_confidence_one: ConfidenceLevel;
   peer_confidence_two: ConfidenceLevel;
   comparison_note: string | null;
+  scenario_one: PlayerScenario | null;
+  scenario_two: PlayerScenario | null;
   metrics: ComparisonMetric[];
 }

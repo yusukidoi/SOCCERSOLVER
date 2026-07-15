@@ -272,12 +272,23 @@ python scripts/build_dataset.py
 - **UX polish** — skeleton loaders, keyboard navigation on search (↑↓ Enter), lazy-loaded
   radar chart, league-context notes, in-memory API cache, and shareable comparison links.
 - **Season context** — header badge shows dataset scope (`2025/26` · Big-5 leagues).
+- **Explainable scouting summary** — profile shows *why* a player ranks well (top percentile
+  drivers), not just percentiles. Built from peer-relative performance and value.
+- **Confidence with reasons** — beyond high/medium/low labels, the UI lists data-quality
+  caveats (sample size, minutes, season-only aggregates).
+- **Strengths & risks** — top 3 strengths and risks for a quick sporting-director read.
+- **Similar profile, lower value** — recruitment panel flags peers with comparable output
+  but lower market value, with estimated savings.
+- **Season trend indicators** — per-90 vs volume gaps proxy direction (honest about
+  missing match-by-match data).
+- **Team fit heuristics** — possession / counter / high-press scores from output metrics.
+- **Recommendation reasoning** — verdict (strong signing → caution) with plain-language reasons.
+- **Scenario comparison** — compare page frames upside, risk, and consistency per player.
 
 ### Still on the roadmap
 
-- **Richer metrics.** Blend FBref data (shots, xG, progressive passes, defensive actions) for a
-  more complete radar — especially position-specific metrics (a centre-back's radar shouldn't be
-  about goals).
+- **Match-level trends.** Last-5-match arrows need per-match or rolling stats (FBref / Opta).
+- **Club-specific team fit.** Wire real tactical profiles per club instead of style heuristics.
 - **Frontend tests.** Component tests for search keyboard nav and comparison rendering.
 - **Persistence & scale.** The in-memory CSV repository is perfect for this dataset size but would
   become a real database (and paginated search) for a production catalogue.

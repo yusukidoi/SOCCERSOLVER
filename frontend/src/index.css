@@ -674,3 +674,248 @@ h1 {
     background-position: -200% 0;
   }
 }
+
+/* --- Scouting insights --- */
+.subsection-title {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.profile__insights {
+  margin-top: 1rem;
+}
+
+.profile__insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .profile__insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insight-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.insight-list--compact {
+  padding-left: 1rem;
+  font-size: 0.85rem;
+}
+
+.insight-list--strengths li {
+  list-style: none;
+  margin-left: -1.1rem;
+  color: #4ade80;
+}
+
+.insight-list--risks li {
+  list-style: none;
+  margin-left: -1.1rem;
+  color: #fbbf24;
+}
+
+.confidence-block {
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+}
+
+.confidence-block--high {
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.confidence-block--medium {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.confidence-block--low {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.confidence-block__label {
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+}
+
+.recommendation {
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.recommendation--strong_signing {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.recommendation--good_signing {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.recommendation--monitor {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.recommendation--caution {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.recommendation__verdict {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.strengths-risks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.trend-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.trend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.88rem;
+}
+
+.trend__arrow {
+  font-weight: 800;
+  width: 1.2rem;
+}
+
+.trend--up .trend__arrow {
+  color: #4ade80;
+}
+
+.trend--down .trend__arrow {
+  color: #f87171;
+}
+
+.trend--stable .trend__arrow {
+  color: var(--muted);
+}
+
+.trend__detail {
+  width: 100%;
+  font-size: 0.8rem;
+}
+
+.team-fit__grid {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .team-fit__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.team-fit__item {
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.team-fit__style {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.team-fit__rating {
+  font-weight: 700;
+}
+
+.team-fit__item--excellent .team-fit__rating {
+  color: #4ade80;
+}
+
+.team-fit__item--high .team-fit__rating {
+  color: #38bdf8;
+}
+
+.similar__section + .similar__section {
+  margin-top: 1rem;
+}
+
+/* --- Scenario comparison --- */
+.scenario__players {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+@media (max-width: 640px) {
+  .scenario__players {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scenario__side p {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+}
+
+.scenario__axes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.scenario-axis {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.scenario-axis__values {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scenario-axis__one {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.scenario-axis__two {
+  color: #f59e0b;
+  font-weight: 700;
+}

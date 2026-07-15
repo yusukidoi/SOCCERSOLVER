@@ -19,6 +19,17 @@ from app.models.analytics import (
     Winner,
 )
 from app.models.player import Player
+from app.services.insights import (
+    annotate_similar_players,
+    build_confidence,
+    build_explainability,
+    build_player_scenario,
+    build_recommendation,
+    build_strengths_and_risks,
+    build_team_fit,
+    build_trends,
+    value_alternatives,
+)
 
 # Minimum peer counts for confidence labelling (percentiles get noisy below this).
 CONFIDENCE_HIGH_MIN = 50
@@ -210,14 +221,35 @@ def build_profile(player: Player, peers: list[Player]) -> PlayerProfile:
     """Contextualise a player's metrics against their league + position peers."""
     definitions = metrics_for_position(player.position)
     market_values = [float(peer.market_value_eur) for peer in peers]
+    peer_group_label = f"{player.position}s in the {player.league}"
+    metrics = _build_metric_contexts(player, peers, definitions)
+    market_value_percentile = percentile_rank(float(player.market_value_eur), market_values)
+    confidence = build_confidence(player, peers, len(peers))
+    strengths, risks = build_strengths_and_risks(player, metrics, confidence)
+    similar = annotate_similar_players(
+        player, find_similar_players(player, peers)
+    )
+
     return PlayerProfile(
         player=player,
-        peer_group_label=f"{player.position}s in the {player.league}",
+        peer_group_label=peer_group_label,
         peer_group_size=len(peers),
-        peer_confidence=peer_confidence(len(peers)),
-        market_value_percentile=percentile_rank(float(player.market_value_eur), market_values),
-        metrics=_build_metric_contexts(player, peers, definitions),
-        similar_players=find_similar_players(player, peers),
+        peer_confidence=confidence.level,
+        confidence=confidence,
+        market_value_percentile=market_value_percentile,
+        metrics=metrics,
+        explainability=build_explainability(
+            player, metrics, market_value_percentile, peer_group_label
+        ),
+        strengths=strengths,
+        risks=risks,
+        trends=build_trends(player, metrics),
+        team_fit=build_team_fit(player, metrics),
+        recommendation=build_recommendation(
+            player, metrics, market_value_percentile, confidence, strengths, risks
+        ),
+        similar_players=similar,
+        value_alternatives=value_alternatives(similar),
     )
 
 
@@ -268,23 +300,34 @@ def build_comparison(
             )
         )
 
+    one_mv_pct = percentile_rank(
+        float(one.market_value_eur), [float(p.market_value_eur) for p in one_peers]
+    )
+    two_mv_pct = percentile_rank(
+        float(two.market_value_eur), [float(p.market_value_eur) for p in two_peers]
+    )
+    one_defs = metrics_for_position(one.position)
+    two_defs = metrics_for_position(two.position)
+    one_metrics = _build_metric_contexts(one, one_peers, one_defs)
+    two_metrics = _build_metric_contexts(two, two_peers, two_defs)
+    one_conf = build_confidence(one, one_peers, len(one_peers))
+    two_conf = build_confidence(two, two_peers, len(two_peers))
+
     return PlayerComparison(
         one=one,
         two=two,
-        one_market_value_percentile=percentile_rank(
-            float(one.market_value_eur), [float(p.market_value_eur) for p in one_peers]
-        ),
-        two_market_value_percentile=percentile_rank(
-            float(two.market_value_eur), [float(p.market_value_eur) for p in two_peers]
-        ),
+        one_market_value_percentile=one_mv_pct,
+        two_market_value_percentile=two_mv_pct,
         one_peer_group_size=len(one_peers),
         two_peer_group_size=len(two_peers),
-        peer_confidence_one=peer_confidence(len(one_peers)),
-        peer_confidence_two=peer_confidence(len(two_peers)),
+        peer_confidence_one=one_conf.level,
+        peer_confidence_two=two_conf.level,
         comparison_note=(
             "Cross-position comparison uses shared output metrics."
             if cross_position
             else None
         ),
+        scenario_one=build_player_scenario(one, one_metrics, one_mv_pct, one_conf),
+        scenario_two=build_player_scenario(two, two_metrics, two_mv_pct, two_conf),
         metrics=metrics,
     )

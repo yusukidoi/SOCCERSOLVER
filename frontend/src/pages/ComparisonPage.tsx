@@ -6,6 +6,7 @@ import { formatMarketValue } from "../lib/format";
 import PlayerPicker from "../components/PlayerPicker";
 import ComparisonRow from "../components/ComparisonRow";
 import ConfidenceBadge from "../components/ConfidenceBadge";
+import ScenarioPanel from "../components/ScenarioPanel";
 import Skeleton from "../components/Skeleton";
 import CopyShareLink from "../components/CopyShareLink";
 
@@ -119,6 +120,14 @@ export default function ComparisonPage() {
         <>
           {comparison.comparison_note && (
             <p className="cmp__note">{comparison.comparison_note}</p>
+          )}
+          {comparison.scenario_one && comparison.scenario_two && (
+            <ScenarioPanel
+              oneName={comparison.one.name}
+              twoName={comparison.two.name}
+              scenarioOne={comparison.scenario_one}
+              scenarioTwo={comparison.scenario_two}
+            />
           )}
           {comparison.one.league !== comparison.two.league && (
             <p className="cmp__note">

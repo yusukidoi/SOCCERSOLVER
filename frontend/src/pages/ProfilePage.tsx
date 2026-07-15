@@ -5,6 +5,10 @@ import type { PlayerProfile } from "../types";
 import { formatMarketValue, ordinalPercentile } from "../lib/format";
 import MetricBar from "../components/MetricBar";
 import ConfidenceBadge from "../components/ConfidenceBadge";
+import ConfidenceDetail from "../components/ConfidenceDetail";
+import RecommendationCard from "../components/RecommendationCard";
+import TrendList from "../components/TrendList";
+import TeamFitGrid from "../components/TeamFitGrid";
 import SimilarPlayers from "../components/SimilarPlayers";
 import ProfileSkeleton from "../components/ProfileSkeleton";
 import Skeleton from "../components/Skeleton";
@@ -54,8 +58,16 @@ export default function ProfilePage() {
     peer_group_label,
     peer_group_size,
     peer_confidence,
+    confidence,
     market_value_percentile,
+    explainability,
+    strengths,
+    risks,
+    trends,
+    team_fit,
+    recommendation,
     similar_players,
+    value_alternatives,
   } = profile;
 
   return (
@@ -86,6 +98,60 @@ export default function ProfilePage() {
         </div>
       </header>
 
+      <div className="profile__insights card">
+        <h2 className="section-title">Scouting summary</h2>
+        <p className="muted section-hint">
+          Built for trust — why they rank, what to watch, and a clear recommendation.
+        </p>
+
+        <div className="profile__insights-grid">
+          <div>
+            {recommendation && <RecommendationCard recommendation={recommendation} />}
+            {explainability.length > 0 && (
+              <div className="explainability">
+                <h3 className="subsection-title">Why ranked highly</h3>
+                <ul className="insight-list">
+                  {explainability.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <ConfidenceDetail confidence={confidence} />
+            <ConfidenceBadge level={peer_confidence} peerCount={peer_group_size} />
+
+            <div className="strengths-risks">
+              {strengths.length > 0 && (
+                <div>
+                  <h3 className="subsection-title">Strengths</h3>
+                  <ul className="insight-list insight-list--strengths">
+                    {strengths.map((item) => (
+                      <li key={item}>✓ {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {risks.length > 0 && (
+                <div>
+                  <h3 className="subsection-title">Risks</h3>
+                  <ul className="insight-list insight-list--risks">
+                    {risks.map((item) => (
+                      <li key={item}>⚠ {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <TrendList trends={trends} />
+            <TeamFitGrid teamFit={team_fit} />
+          </div>
+        </div>
+      </div>
+
       <div className="profile__grid">
         <div className="card">
           <h2 className="section-title">Performance shape</h2>
@@ -111,7 +177,11 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <SimilarPlayers players={similar_players} currentPlayerId={player.player_id} />
+      <SimilarPlayers
+        players={similar_players}
+        valueAlternatives={value_alternatives}
+        currentPlayerId={player.player_id}
+      />
     </section>
   );
 }
