@@ -64,6 +64,11 @@ h1 {
   font-size: 0.85rem;
 }
 
+.app__season {
+  margin-left: auto;
+  font-size: 0.72rem;
+}
+
 .app__main {
   max-width: 1080px;
   margin: 0 auto;
@@ -598,7 +603,20 @@ h1 {
   transition: width 0.4s ease;
 }
 
+.share-link {
+  align-self: flex-start;
+  padding-left: 0;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 640px) {
+  .app__header {
+    flex-wrap: wrap;
+  }
+  .app__season {
+    margin-left: 0;
+    width: 100%;
+  }
   .cmp__pickers {
     grid-template-columns: 1fr;
   }

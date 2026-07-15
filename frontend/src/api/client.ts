@@ -1,4 +1,5 @@
 import type { PlayerComparison, PlayerProfile, PlayerSummary } from "../types";
+import { cacheGet, cacheSet, comparisonCacheKey } from "./cache";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -30,7 +31,14 @@ export function searchPlayers(query: string, signal?: AbortSignal): Promise<Play
 }
 
 export function getPlayerProfile(playerId: number, signal?: AbortSignal): Promise<PlayerProfile> {
-  return request<PlayerProfile>(`/players/${playerId}/profile`, signal);
+  const key = `profile:${playerId}`;
+  const cached = cacheGet<PlayerProfile>(key);
+  if (cached) return Promise.resolve(cached);
+
+  return request<PlayerProfile>(`/players/${playerId}/profile`, signal).then((profile) => {
+    cacheSet(key, profile);
+    return profile;
+  });
 }
 
 export function comparePlayers(
@@ -38,5 +46,14 @@ export function comparePlayers(
   twoId: number,
   signal?: AbortSignal,
 ): Promise<PlayerComparison> {
-  return request<PlayerComparison>(`/comparison?one=${oneId}&two=${twoId}`, signal);
+  const key = comparisonCacheKey(oneId, twoId);
+  const cached = cacheGet<PlayerComparison>(key);
+  if (cached) return Promise.resolve(cached);
+
+  return request<PlayerComparison>(`/comparison?one=${oneId}&two=${twoId}`, signal).then(
+    (comparison) => {
+      cacheSet(key, comparison);
+      return comparison;
+    },
+  );
 }

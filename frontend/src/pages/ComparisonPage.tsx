@@ -7,6 +7,7 @@ import PlayerPicker from "../components/PlayerPicker";
 import ComparisonRow from "../components/ComparisonRow";
 import ConfidenceBadge from "../components/ConfidenceBadge";
 import Skeleton from "../components/Skeleton";
+import CopyShareLink from "../components/CopyShareLink";
 
 function useSlot(id: number | null): PlayerSummary | null {
   const [player, setPlayer] = useState<PlayerSummary | null>(null);
@@ -85,6 +86,7 @@ export default function ComparisonPage() {
       <Link to="/" className="button button--ghost">← Back to search</Link>
       <h1>Compare players</h1>
       <p className="muted">Pick two players to see who leads on each metric.</p>
+      {comparison && <CopyShareLink />}
 
       <div className="cmp__pickers">
         <PlayerPicker

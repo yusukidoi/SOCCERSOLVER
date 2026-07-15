@@ -270,16 +270,15 @@ python scripts/build_dataset.py
 - **Similar players** — profile suggests up to 5 peers with the closest performance shape
   (cosine similarity on position metrics), with one-click compare.
 - **UX polish** — skeleton loaders, keyboard navigation on search (↑↓ Enter), lazy-loaded
-  radar chart, and a league-context note when comparing players from different leagues.
+  radar chart, league-context notes, in-memory API cache, and shareable comparison links.
+- **Season context** — header badge shows dataset scope (`2025/26` · Big-5 leagues).
 
 ### Still on the roadmap
 
 - **Richer metrics.** Blend FBref data (shots, xG, progressive passes, defensive actions) for a
   more complete radar — especially position-specific metrics (a centre-back's radar shouldn't be
   about goals).
-- **Code-splitting.** Recharts is lazy-loaded on the profile page; further route-level
-  splitting would cut initial load more.
-- **Frontend tests + caching.** No component tests and no request caching (e.g. React Query).
+- **Frontend tests.** Component tests for search keyboard nav and comparison rendering.
 - **Persistence & scale.** The in-memory CSV repository is perfect for this dataset size but would
   become a real database (and paginated search) for a production catalogue.
 - **Accessibility & polish.** Keyboard navigation for the search dropdown and fuller ARIA labelling
